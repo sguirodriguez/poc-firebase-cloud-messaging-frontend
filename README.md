@@ -78,6 +78,34 @@ Make sure to deploy the output of `npm run build`
 │   └── server/    # Server-side code
 ```
 
+## Firebase Messaging (push notifications)
+
+Este projeto usa Firebase Cloud Messaging (FCM) para simular notificações push na web.
+
+### Configuração
+
+1. **VAPID key**  
+   Em [Firebase Console](https://console.firebase.google.com/) → Project Settings → Cloud Messaging → **Web Push certificates**, gere um par de chaves e copie a chave pública.
+
+2. **Variável de ambiente**  
+   Crie um arquivo `.env` na raiz (use `.env.example` como base) e defina:
+
+   ```
+   VITE_FIREBASE_VAPID_KEY=sua-chave-vapid-aqui
+   ```
+
+3. **Service Worker**  
+   O Service Worker do Firebase é gerado pelo **Webpack** (entry: `src/firebase-messaging-sw.js`). O build roda com `npm run build:sw` e gera `public/firebase-messaging-sw.js`, servido na raiz. Ele trata mensagens em background (quando a aba está fechada ou sem foco). Para injetar a VAPID key no SW, use `VITE_VAPID_KEY` no `.env` antes do build.
+
+4. **HTTPS**  
+   Push notifications exigem contexto seguro. Em desenvolvimento, use `https` no Vite ou um túnel (ex.: ngrok). Em produção, use HTTPS.
+
+### Fluxo no app
+
+- **Dashboard** → botão "Ativar notificações" pede permissão, registra o SW e obtém o **token FCM**. Esse token deve ser enviado ao seu backend para enviar mensagens a este dispositivo.
+- **Foreground** (aba aberta): mensagens são tratadas por `NotificationListener` em `app/components/NotificationListener.tsx` e por `onMessage` no `app/lib/messaging.ts`.
+- **Background** (aba fechada): mensagens são tratadas pelo service worker `firebase-messaging-sw.js`.
+
 ## Styling
 
 This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
